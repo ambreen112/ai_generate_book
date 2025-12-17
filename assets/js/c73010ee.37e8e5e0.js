@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunkbook_site=globalThis.webpackChunkbook_site||[]).push([[1901],{8959:o=>{o.exports=JSON.parse('{"metadata":{"permalink":"/ai_generate_book/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":4,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
