@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book RAG Chatbot</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            background: white;
+            border: 3px solid #0066ff;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 0 30px rgba(0, 100, 255, 0.4);
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+        }
+
+        .chat-header {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #0066ff;
+        }
+
+        .selected-text-info {
+            background-color: #e6f7ff;
+            padding: 5px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .chat-input {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+
+        .send-button {
+            margin-top: 8px;
+            padding: 10px 20px;
+            background: #0066ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .send-button:hover {
+            background: #0056cc;
+        }
+
+        .response-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .thinking {
+            color: #666;
+            font-style: italic;
+        }
+
+        .error {
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function ChatBot() {
+            const [question, setQuestion] = useState('');
+            const [answer, setAnswer] = useState('');
+            const [selectedText, setSelectedText] = useState('');
+            const [isThinking, setIsThinking] = useState(false);
+
+            // Handle text selection
+            useEffect(() => {
+                const handleSelection = () => {
+                    const selected = window.getSelection()?.toString().trim() || '';
+                    setSelectedText(selected);
+                };
+
+                document.addEventListener('mouseup', handleSelection);
+                return () => document.removeEventListener('mouseup', handleSelection);
+            }, []);
+
+            const sendQuestion = async () => {
+                if (!question.trim()) return;
+
+                setIsThinking(true);
+                setAnswer('');
+
+                try {
+                    const response = await fetch('http://localhost:8000/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            messages: [{ role: 'user', content: question }],
+                            selected_text: selectedText
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    setAnswer(data.answer);
+                } catch (error) {
+                    console.error('Error:', error);
+                    setAnswer('Error occurred while processing your request. Please try again.');
+                } finally {
+                    setIsThinking(false);
+                }
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendQuestion();
+                }
+            };
+
+            return (
+                <div id="chatbot-container">
+                    <h3 className="chat-header">AI Book Assistant</h3>
+
+                    {selectedText && (
+                        <div className="selected-text-info">
+                            <strong>Selected text:</strong> {selectedText.substring(0, 100)}{selectedText.length > 100 ? '...' : ''}
+                        </div>
+                    )}
+
+                    <textarea
+                        className="chat-input"
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Ask a question about the book..."
+                        rows="3"
+                    />
+
+                    <button
+                        className="send-button"
+                        onClick={sendQuestion}
+                        disabled={isThinking}
+                    >
+                        {isThinking ? 'Thinking...' : 'Send'}
+                    </button>
+
+                    {(isThinking || answer) && (
+                        <div className="response-container">
+                            {isThinking ? (
+                                <div className="thinking">Thinking...</div>
+                            ) : (
+                                <div>{answer}</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChatBot />);
+    </script>
+</body>
+</html>
