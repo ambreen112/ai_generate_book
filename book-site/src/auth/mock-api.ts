@@ -7,11 +7,18 @@ class MockAuthAPI {
   private sessions: any[] = [];
 
   constructor() {
-    // Load users from localStorage on initialization
-    this.loadUsersFromStorage();
+    // Load users from localStorage on initialization (only in browser)
+    if (typeof window !== 'undefined') {
+      this.loadUsersFromStorage();
+    }
   }
 
   private loadUsersFromStorage() {
+    if (typeof window === 'undefined') {
+      // If not in browser environment, don't attempt to access localStorage
+      return;
+    }
+
     const storedUsers = localStorage.getItem('mock-users');
     if (storedUsers) {
       try {
@@ -24,6 +31,10 @@ class MockAuthAPI {
   }
 
   private saveUsersToStorage() {
+    if (typeof window === 'undefined') {
+      // If not in browser environment, don't attempt to access localStorage
+      return;
+    }
     localStorage.setItem('mock-users', JSON.stringify(this.users));
   }
 
@@ -63,11 +74,13 @@ class MockAuthAPI {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
       });
 
-      // Store session in localStorage
-      localStorage.setItem('mock-session', JSON.stringify({
-        user: newUser,
-        sessionId,
-      }));
+      // Store session in localStorage (only in browser)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('mock-session', JSON.stringify({
+          user: newUser,
+          sessionId,
+        }));
+      }
 
       return {
         user: newUser,
@@ -116,11 +129,13 @@ class MockAuthAPI {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
       });
 
-      // Store session in localStorage
-      localStorage.setItem('mock-session', JSON.stringify({
-        user,
-        sessionId,
-      }));
+      // Store session in localStorage (only in browser)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('mock-session', JSON.stringify({
+          user,
+          sessionId,
+        }));
+      }
 
       return {
         user,
@@ -141,6 +156,11 @@ class MockAuthAPI {
   }
 
   async getCurrentUser() {
+    if (typeof window === 'undefined') {
+      // If not in browser environment, return null
+      return null;
+    }
+
     const sessionData = localStorage.getItem('mock-session');
     if (!sessionData) {
       return null;
@@ -151,13 +171,27 @@ class MockAuthAPI {
   }
 
   async signOut() {
-    localStorage.removeItem('mock-session');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('mock-session');
+    }
     return { success: true };
   }
 }
 
 // Create a global instance
-const mockAuthAPI = new MockAuthAPI();
+let mockAuthAPI: MockAuthAPI;
+
+if (typeof window !== 'undefined') {
+  mockAuthAPI = new MockAuthAPI();
+} else {
+  // Create a dummy instance for server-side rendering
+  mockAuthAPI = {
+    signUp: async () => ({ error: { message: 'Authentication not available during server-side rendering' } }),
+    signIn: async () => ({ error: { message: 'Authentication not available during server-side rendering' } }),
+    getCurrentUser: async () => null,
+    signOut: async () => ({ success: true }),
+  } as MockAuthAPI;
+}
 
 // Mock API endpoints that can be used by the signup/signin pages
 export const mockAuthEndpoints = {
