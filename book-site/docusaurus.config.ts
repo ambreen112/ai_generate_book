@@ -18,7 +18,7 @@ const config: Config = {
   url: 'https://ambreen112.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: 'ai_generate_book',
+  baseUrl: '/ai_generate_book/',
   trailingSlash: false,
 
   // GitHub pages deployment config.
@@ -83,12 +83,21 @@ const config: Config = {
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
+          type: 'doc',
+          docId: 'foundation/what-is-physical-ai',
           position: 'left',
           label: 'TextBook',
         },
-        
+        {
+          to: '/signup',
+          label: 'Sign Up',
+          position: 'right',
+        },
+        {
+          to: '/signin',
+          label: 'Sign In',
+          position: 'right',
+        },
         {
           href: 'https://github.com/facebook/docusaurus',
           label: 'GitHub',
@@ -104,7 +113,7 @@ const config: Config = {
           items: [
             {
               label: 'Tutorial',
-              to: '/docs/intro',
+              to: '/docs/foundation/what-is-physical-ai',
             },
           ],
         },

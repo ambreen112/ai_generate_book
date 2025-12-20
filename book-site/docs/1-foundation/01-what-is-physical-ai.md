@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# What is Physical AI? Historical Context and Motivation
+# Chapter 1:  What is Physical AI? Historical Context and Motivation
 
 ## The Dawn of Artificial Intelligence and its Embodiment
 

@@ -88,7 +88,23 @@ def retrieve(query: str, selected_text: str = "") -> str:
                     "priority": "selected"
                 })
         except Exception as e:
-            logger.warning(f"Error processing selected text embedding: {e}")
+            # Try the newer query_points method if search fails
+            try:
+                sel_hits = qdrant_client.query_points(
+                    collection_name=collection_name,
+                    query=sel_emb,
+                    limit=8,  # Higher limit for selected text priority
+                    with_payload=True
+                ).points
+                for hit in sel_hits:
+                    all_results.append({
+                        "text": hit.payload.get("text", ""),
+                        "filename": hit.payload.get("filename", "unknown"),
+                        "score": getattr(hit, 'score', getattr(hit, 'distance', 0)),  # Handle both old and new API
+                        "priority": "selected"
+                    })
+            except Exception as e2:
+                logger.warning(f"Error processing selected text embedding: {e}, {e2}")
 
     # Priority 2: Main query
     try:
@@ -101,8 +117,17 @@ def retrieve(query: str, selected_text: str = "") -> str:
             with_payload=True
         )
     except Exception as e:
-        logger.error(f"Error processing query embedding: {e}")
-        return "Error: Unable to process the query. API quota may be exceeded or service unavailable."
+        # Try the newer query_points method if search fails
+        try:
+            query_hits = qdrant_client.query_points(
+                collection_name=collection_name,
+                query=query_emb,
+                limit=10,
+                with_payload=True
+            ).points
+        except Exception as e2:
+            logger.error(f"Error processing query embedding: {e}, {e2}")
+            return "Error: Unable to process the query. API quota may be exceeded or service unavailable."
 
     for hit in query_hits:
         text = hit.payload.get("text", "")
@@ -112,7 +137,7 @@ def retrieve(query: str, selected_text: str = "") -> str:
             all_results.append({
                 "text": text,
                 "filename": filename,
-                "score": hit.score,
+                "score": getattr(hit, 'score', getattr(hit, 'distance', 0)),  # Handle both old and new API
                 "priority": "query"
             })
 

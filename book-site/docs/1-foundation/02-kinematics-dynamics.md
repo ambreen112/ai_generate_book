@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Kinematics and Dynamics of Humanoid Robots
+# Chapter 2: Kinematics and Dynamics of Humanoid Robots
 
 ## Introduction: The Language of Robot Motion
 

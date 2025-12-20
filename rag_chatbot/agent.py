@@ -154,6 +154,20 @@ def extract_sources(context: str) -> list:
     source_matches = re.findall(r'\[Source: ([^\]]+)\]', context)
     return list(set(source_matches))  # Remove duplicates
 
+def run_agent_sync(question: str, selected_text: str = ""):
+    """
+    Synchronous wrapper for the RAG agent.
+    This function is used by the backend API to ensure compatibility with async FastAPI endpoints.
+
+    Args:
+        question (str): The question to answer
+        selected_text (str): Optional selected text from the book (highest priority context)
+
+    Returns:
+        dict: The agent's response
+    """
+    return run_agent(question, selected_text)
+
 if __name__ == "__main__":
     # Test run of the agent
     test_question = "What are the key concepts in this book?"
