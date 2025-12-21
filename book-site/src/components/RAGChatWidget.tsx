@@ -60,7 +60,7 @@ const RAGChatWidget: React.FC = () => {
 
     try {
       // Call the backend API
-      const response = await fetch('http://localhost:8000/query', {
+      const response = await fetch('https://fast-lonee-aigeneratebook-584f2397.koyeb.app/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
